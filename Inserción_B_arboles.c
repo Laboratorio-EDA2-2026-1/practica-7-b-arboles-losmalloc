@@ -119,7 +119,9 @@ void recorrer(struct Nodo* nodo){
 
 //Pirncipal main 
 int main (){
-    struct Nodo* raiz = NULL; 
+    struct Nodo* raiz = NULL;
+    printf("Las claves originales son:\n");
+    printf("22, 5, 4, 3, 21, 10, 12, 88\n");
     int claves[] = {22, 5, 4, 3, 21, 10, 12, 88}; 
     int n = sizeof(claves) / sizeof(claves[0]); 
     
@@ -127,7 +129,7 @@ int main (){
         raiz = insertar(raiz, claves[i]);
     }
     
-    printf("Recorrido del arbol:\n");
+    printf("\nRecorrido del arbol:\n");
     recorrer(raiz);
     printf("\n");
     return 0;
