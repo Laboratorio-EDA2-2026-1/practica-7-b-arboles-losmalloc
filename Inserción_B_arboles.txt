@@ -1,2 +1,134 @@
+/**
 Implementa aquí todos los procesos necesarios para la operación de inserción. 
 Pueden modificar la extensión del documento para que se ajuste al lenguaje de su elección y comentar estas instrucciones.
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#define T 2 //grado del B-Arbol 
+
+//para el molde del nodo 
+struct Nodo{
+    int clave [2*T-1]; //arreglo de claves 
+    struct Nodo*hijos[2*T]; //arreglo para los hijos
+    int n;
+    int hojas; 
+};
+
+//crear el nodo 
+struct Nodo* crearNodo(int hoja){
+    struct Nodo* nuevo = (struct Nodo*)malloc(sizeof(struct Nodo));
+    nuevo->hojas = hoja;
+    nuevo->n = 0;
+    for(int i =0; i<2*T; i++){
+        nuevo->hijos[i]= NULL;
+        
+    }
+    return nuevo;
+}
+//funcion para dividir un hijo 
+void dividirHijo(struct Nodo* padre, int i, struct Nodo* lleno){
+    struct Nodo* nuevo = crearNodo(lleno->hojas); 
+    nuevo->n = T-1; 
+    for(int j = 0; j < T-1; j++){
+        nuevo->clave[j]= lleno->clave[j + T];
+        
+    }
+    if(lleno->hojas ==0){
+        for(int j = 0; j < T; j++){
+            nuevo->hijos[j] = lleno->hijos[j + T];
+        }
+    }
+    lleno->n = T-1;
+    
+    for(int j = padre->n; j >= i+1; j--){
+        padre->hijos[j + 1] = padre->hijos[j];
+    }
+    padre->hijos[i + 1] = nuevo;
+    
+    for(int j = padre->n-1; j>=i; j--){
+        padre->clave[j+1] = padre->clave[j];
+    }
+    
+    padre->clave[i] = lleno->clave[T-1];
+    padre->n++;
+}
+
+//insertar una clave en un nodo que no esta lleno 
+void insertarNoLleno(struct Nodo* nodo, int k){
+    int i = nodo->n -1; 
+    
+    if(nodo->hojas ==1){
+        //mueve las claves mayores a la derecha 
+        while (i >= 0 && k < nodo->clave[i]){
+            nodo->clave[i + 1] = nodo->clave[i];
+            i--;
+        }
+        nodo->clave[i+1] = k;
+        nodo->n++; 
+    } else {
+        //busca el hijo que corresponde 
+        while(i >= 0 && k < nodo->clave[i]){
+            i--;
+        }
+        i++;
+            //si el hijo esta lleno se divide 
+            if(nodo->hijos[i]->n == 2*T-1){
+                dividirHijo(nodo, i, nodo->hijos[i]);
+                if(k > nodo->clave[i]){
+                    i++;
+                }
+            }
+            insertarNoLleno(nodo->hijos[i], k);
+    }
+    
+}
+//insertar una de las claves en el B-arbol 
+struct Nodo* insertar(struct Nodo* raiz, int k){
+    if(raiz == NULL){
+        raiz = crearNodo(1);
+        raiz->clave[0]= k;
+        raiz->n = 1; 
+    }else {
+        if(raiz->n == 2*T-1){
+            struct Nodo* nuevaRaiz = crearNodo(0); 
+            nuevaRaiz->hijos[0] = raiz;
+            dividirHijo(nuevaRaiz, 0, raiz);
+            
+            int i = 0; 
+            if(k > nuevaRaiz->clave[0]){
+                i++;
+            }
+            insertarNoLleno(nuevaRaiz->hijos[i], k);
+            raiz = nuevaRaiz;
+        } else {
+            insertarNoLleno(raiz, k);
+        }
+    }
+    return raiz;
+}
+//mostrar el contenido del arbol en orden 
+void recorrer(struct Nodo* nodo){
+    if(nodo == NULL) return;
+    int i; 
+    for(i = 0; i < nodo->n; i++){
+        if(nodo->hojas == 0) recorrer(nodo->hijos[i]); 
+        printf("%d ", nodo->clave[i]);
+    }
+    if(nodo->hojas == 0) recorrer(nodo->hijos[i]);
+}
+
+//Pirncipal main 
+int main (){
+    struct Nodo* raiz = NULL; 
+    int claves[] = {22, 5, 4, 3, 21, 10, 12, 88}; 
+    int n = sizeof(claves) / sizeof(claves[0]); 
+    
+    for(int i = 0; i < n; i++){
+        raiz = insertar(raiz, claves[i]);
+    }
+    
+    printf("Recorrido del arbol:\n");
+    recorrer(raiz);
+    printf("\n");
+    return 0;
+}
