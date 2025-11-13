@@ -246,8 +246,7 @@ int main() {
 	raiz->keys[0]=19;
 	raiz->keys[1]=20;
 	raiz->keys[2]=30;
-	raiz->keys[3]=95;
-	raiz->n=4;
+	raiz->n=3;
 
 	printf("\nOriginal:\n");
 	mostrar(raiz,0);
