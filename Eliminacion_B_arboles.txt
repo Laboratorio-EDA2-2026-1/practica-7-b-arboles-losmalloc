@@ -1,2 +1,209 @@
 Implementa aquí todos los procesos necesarios para la operación de eliminación. 
 Pueden modificar la extensión del documento para que se ajuste al lenguaje de su elección y comentar estas instrucciones.
+#include <stdio.h>
+#include <stdlib.h>
+#define T 2 //El grado mC-nimo que el C!rbol puede tomar 
+
+typedef struct BArbolNodo {
+//Claves
+	int keys[2*T-1];
+//Hijos
+	struct BArbolNodo* hijo[2*T];
+//Representan las claves
+	int n;
+	int hoja;
+} BArbolNodo;
+
+//CreaciC3n del nodo
+
+BArbolNodo* crearNodo(int hoja) {
+	BArbolNodo* nodo = (BArbolNodo*)malloc(sizeof(BArbolNodo));
+	nodo->hoja=hoja;
+	nodo->n=0;
+	for(int i=0; i<2*T; i++) 
+		nodo->hijo[i]=NULL;
+		return nodo;
+	
+}
+
+//Funcion implementada para buscar la clave a travC)s del C!rbol
+
+BArbolNodo* buscador(BArbolNodo* nodo, int key, int* indexFound) {
+	int i=0;
+
+	while(i<nodo->n && key > nodo->keys[i])
+		i++;
+
+	if(i<nodo->n && nodo->keys[i]==key ) {
+		if(indexFound) *indexFound = i;
+		return nodo;
+	}
+	if(nodo->hoja==1)
+		return NULL;
+	return buscador(nodo->hijo[i], key, indexFound);
+
+}
+
+
+//Obtener el anterior
+int obtenerAnterior(BArbolNodo* nodo, int idx){
+    BArbolNodo* actual= nodo->hijo[idx];
+    while(actual->hoja==0)
+    actual=actual->hijo[actual->n];
+    return actual->keys[actual->n-1];
+}
+
+//Funcion para obtener el siguiente
+
+int obtenerSiguiente(BArbolNodo* nodo, int idx){
+    BArbolNodo* actual = nodo->hijo[idx+1];
+    while(actual->hoja==0)
+    actual=actual->hijo[0];
+    return actual->keys[0];
+}
+
+
+//Fusion dos nodos
+
+void fusion(BArbolNodo* nodo, int idx){
+    BArbolNodo* hijo=nodo->hijo[idx];
+    BArbolNodo* hermano=nodo->hijo[idx+1];
+    
+    hijo->keys[T - 1]= nodo->keys[idx];
+    for (int i = 0; i < hermano->n; i++) 
+        hijo->keys[i + T]=hermano->keys[i];
+    if(hijo->hoja==0){
+        for (int i = 0; i <=hermano->n; i++)
+        hijo->hijo[i+T]=hermano->hijo[i];
+    }
+    
+    for (int i = idx+1; i < nodo->n; i++) 
+    nodo->keys[i-1]=nodo->keys[i];
+    
+    for (int i = idx +2; i < nodo->n; i++)
+    nodo->hijo[i-1]=nodo->hijo[i];
+    
+    hijo->n += hermano->n+1;
+    nodo->n--;
+    free(hermano);
+    
+    
+}  
+
+//LLenar hijo si tiene menos de T-1 claves
+
+void llenar (BArbolNodo* nodo, int idx){
+    if(idx != 0 && nodo->hijo[idx-1]->n>=T)
+    fusion(nodo,idx-1);
+  else if(idx !=nodo->n && nodo->hijo[idx+1]->n >=T)
+    fusion(nodo,idx);
+    else{
+     if(idx!=nodo->n)
+     fusion(nodo,idx);
+     else
+    fusion(nodo,idx-1);
+    }
+}
+
+//Eliminacion de un nodo
+void eliminacionDesdeNodo(BArbolNodo* nodo, int key){
+    int idx=0;
+    while(idx<nodo->n && nodo->keys[idx]<key)
+    idx++;
+    
+    //Si la clave se encuentra en el nodo:
+    if(idx<nodo->n && nodo->keys[idx]==key){
+        if(nodo->hoja==1){
+            //En este caso se borra directamente
+            for (int i =  idx +1; i<nodo->n; i++)
+                 nodo->keys[i-1]=nodo->keys[i];
+                 nodo->n--;
+        }else{
+            if(nodo->hijo[idx]->n>=T){
+                int antes= obtenerAnterior(nodo,idx);
+                nodo->keys[idx]=antes;
+                eliminacionDesdeNodo(nodo->hijo[idx], antes);
+            } else if( nodo->hijo[idx+1]->n>=T){
+                int despu=obtenerSiguiente(nodo, idx);
+                nodo->keys[idx]=despu;
+                eliminacionDesdeNodo(nodo->hijo[idx+1], despu);
+            }else{
+                fusion(nodo,idx);
+                eliminacionDesdeNodo(nodo->hijo[idx], key);
+            }
+        }
+    }else{
+        //Si la clave no se encuentra en el nodo-
+        if(nodo->hoja==1){
+            printf("La clave %d no se encontra en este nodo\n", key);
+            return;
+        }
+        
+        int band=(idx ==nodo->n);
+        if(nodo->hijo[idx]->n<T)
+        llenar(nodo, idx);
+        
+        if(band && idx >nodo->n)
+        eliminacionDesdeNodo(nodo->hijo[idx-1], key);
+        else
+        eliminacionDesdeNodo(nodo->hijo[idx], key);
+    }
+}
+//Eliminar clave de raíz
+
+void eliminacion(BArbolNodo** raiz, int key){
+    if(*raiz==NULL)
+    return;
+    
+    eliminacionDesdeNodo(*raiz,key);
+    if((*raiz)->n==0){
+        BArbolNodo* tmp = *raiz;
+        if((*raiz)->hoja==1)
+        *raiz=NULL;
+        else
+        *raiz=(*raiz)->hijo[0];
+        free(tmp);
+    }
+}
+ 
+ //Funcion poara mostrar el árbol
+ 
+ void mostrar(BArbolNodo* nodo, int nivel){
+     if(nodo==NULL)
+     return;
+     
+     
+     for (int i = 0; i < nodo->n; i++){
+         if(nodo->hoja==0)
+         mostrar(nodo->hijo[i], nivel+1);
+         for(int j=0; j<nivel;j++) 
+         printf(" ");
+         printf("%d\n", nodo->keys[i]);
+     }
+     if(nodo->hoja==0)
+     mostrar(nodo->hijo[nodo->n], nivel+1);
+         
+ }
+    
+//Crearemos un int main para poder probar su uso
+
+int main() {
+
+	BArbolNodo* raiz =crearNodo(1);
+	raiz->keys[0]=19;
+	raiz->keys[1]=30;
+	raiz->n=2;
+
+	printf("\nOriginal:\n");
+	mostrar(raiz,0);
+	
+	int clave=30;
+
+    printf("\nEliminando clave %d\n",clave);
+    eliminacion(&raiz, clave);
+    
+    printf("\nArbol actual:\n");
+    mostrar(raiz, 0);
+	
+	return 0;
+}
