@@ -1,5 +1,3 @@
-/*Implementa aquí la operación de búsqueda. 
-Pueden modificar la extensión del documento para que se ajuste al lenguaje de su elección y comentar estas instrucciones.*/
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,7 +18,7 @@ typedef struct {
 } ResultadoBusqueda;
 
 // Crea un nodo B-Tree vacío
-BArbolNodo* crearNodo(int hoja) {  // 🔹 corregido nombre (antes: createNodo)
+BArbolNodo* crearNodo(int hoja) {
     BArbolNodo* nodo = (BArbolNodo*)malloc(sizeof(BArbolNodo));
     nodo->keys = (int*)malloc(sizeof(int) * (2 * T - 1));
     nodo->hijos = (BArbolNodo**)malloc(sizeof(BArbolNodo*) * (2 * T));
@@ -32,60 +30,70 @@ BArbolNodo* crearNodo(int hoja) {  // 🔹 corregido nombre (antes: createNodo)
 // Implementación de la búsqueda en B-Tree
 ResultadoBusqueda BArbolNodo_search(BArbolNodo *x, int k) {
     int i = 0;
-    // Encuentra el primer índice mayor o igual a k
     while (i < x->n && k > x->keys[i])
         i++;
-    // Si se encuentra la clave
+
     if (i < x->n && k == x->keys[i]) {
         ResultadoBusqueda result = {x, i};
         return result;
     }
-    // Si es hoja, no se encontró
+
     if (x->hoja) {
         ResultadoBusqueda resultado = {NULL, -1};
         return resultado;
     }
-    // Buscar recursivamente en el hijo
+
     return BArbolNodo_search(x->hijos[i], k);
 }
 
-// Utilidad para imprimir un nodo encontrado
+// Utilidad para imprimir el resultado
 void imprimirResultado(ResultadoBusqueda res) {
     if (res.nodo != NULL)
-        printf("Clave encontrada en la posición %d del nodo.\n", res.index);
+        printf("✅ Clave encontrada en la posición %d del nodo.\n", res.index);
     else
-        printf("Clave no encontrada.\n");
+        printf("❌ Clave no encontrada en el B-árbol.\n");
 }
 
-// --- CÓDIGO DE PRUEBA Y SETUP MANUAL ---
+// --- CÓDIGO PRINCIPAL ---
 int main() {
-    // Crear raíz y llenarla manualmente
-    BArbolNodo* raiz = crearNodo(0);  // 🔹 corregido nombre de función
-    raiz->keys[0] = 10;
-    raiz->keys[1] = 20;
-    raiz->n = 2;
+    BArbolNodo* raiz = crearNodo(0); // nodo raíz no hoja
+    int numRaiz, numHijo;
 
-    raiz->hijos[0] = crearNodo(1); // 🔹 corregido nombre
-    raiz->hijos[1] = crearNodo(1);
-    raiz->hijos[2] = crearNodo(1);
+    printf("=== Construcción del B-árbol manual ===\n");
+    printf("Número de claves en el nodo raíz (máx %d): ", 2 * T - 1);
+    scanf("%d", &numRaiz);
+    raiz->n = numRaiz;
 
-    raiz->hijos[0]->keys[0] = 5;
-    raiz->hijos[0]->n = 1;
+    for (int i = 0; i < raiz->n; i++) {
+        printf("Clave %d de la raíz: ", i);
+        scanf("%d", &raiz->keys[i]);
+    }
 
-    raiz->hijos[1]->keys[0] = 15;
-    raiz->hijos[1]->n = 1;
+    // Crear hijos
+    for (int i = 0; i <= raiz->n; i++) {
+        raiz->hijos[i] = crearNodo(1); // hijos hoja
+        printf("\nNúmero de claves en el hijo %d (máx %d): ", i, 2 * T - 1);
+        scanf("%d", &numHijo);
+        raiz->hijos[i]->n = numHijo;
 
-    raiz->hijos[2]->keys[0] = 25;
-    raiz->hijos[2]->n = 1;
+        for (int j = 0; j < numHijo; j++) {
+            printf("Clave %d del hijo %d: ", j, i);
+            scanf("%d", &raiz->hijos[i]->keys[j]);
+        }
+    }
+
+    printf("\n=== Estructura del B-árbol ===\n");
+    printf("Nodo raíz: ");
+    for (int j = 0; j < raiz->n; j++) printf("%d ", raiz->keys[j]);
+    for (int i = 0; i <= raiz->n; i++) {
+        printf("\nHijo %d: ", i);
+        for (int j = 0; j < raiz->hijos[i]->n; j++) {
+            printf("%d ", raiz->hijos[i]->keys[j]);
+        }
+    }
+    printf("\n");
 
     int k;
-    printf("Arreglo (B-Arbol manual):\n");
-    printf("Nodo raíz: ");
-    for (int j = 0; j < raiz->n; j++) printf("%d ", raiz->keys[j]);  // 🔹 corregido "root" → "raiz"
-    printf("\nHijo 0: %d\n", raiz->hijos[0]->keys[0]);
-    printf("Hijo 1: %d\n", raiz->hijos[1]->keys[0]);
-    printf("Hijo 2: %d\n", raiz->hijos[2]->keys[0]);
-
     printf("\nIntroduce la clave a buscar: ");
     scanf("%d", &k);
 
@@ -93,11 +101,11 @@ int main() {
     imprimirResultado(resultado);
 
     // Liberar memoria
-    free(raiz->keys);
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i <= raiz->n; i++) {
         free(raiz->hijos[i]->keys);
         free(raiz->hijos[i]);
     }
+    free(raiz->keys);
     free(raiz->hijos);
     free(raiz);
 
